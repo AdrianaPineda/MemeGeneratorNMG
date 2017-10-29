@@ -46,17 +46,30 @@ class CaptionMemeViewController: UIViewController  {
     //MARK: - Services
     
     func generateCaptionedMeme(fromSocial:Int) {
-        let parameters: Parameters = ["template_id":memeDictionary["id"]!,
+        
+        var parameters: Parameters = ["template_id":memeDictionary["id"]!,
                                       "username":"imgflip_hubot",
-                                      "password":"imgflip_hubot",
-                                      "text0":topCaption.text!,
-                                      "text1":bottomCaption.text!]
+                                      "password":"imgflip_hubot"]
+        
+        if !(topCaption.text?.isEmpty)! {
+            parameters.updateValue(topCaption.text!, forKey: "text0")
+        }
+        if !(bottomCaption.text?.isEmpty)! {
+            parameters.updateValue(bottomCaption.text!, forKey: "text1")
+        }
         
         print("Request parameters: \(parameters)") // Debug
         
         let router = Router.captionImage(_: parameters)
         
         APIManager.apiRequest(url: router, success: { (responseJSON) in
+
+            if  responseJSON["success"]! as? Int == 0 {
+                let ac = UIAlertController(title: "Error", message: responseJSON["error_message"]! as? String, preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(ac, animated: true)
+                return
+            }
             
             self.captionedMemeDictionary = responseJSON["data"] as! [String: Any]
             
